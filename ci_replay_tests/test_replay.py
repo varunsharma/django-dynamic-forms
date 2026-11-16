@@ -428,6 +428,59 @@ class ReplayHistoryTests(unittest.TestCase):
                 else:
                     os.environ[name] = value
 
+    def test_valid_v1_cache_falls_back_to_cold_history(self):
+        legacy_failure = SampleTest('test_skip').id()
+        with open(self.history.path, 'w') as stream:
+            __import__('json').dump({
+                'version': 1,
+                'failed': [legacy_failure],
+                'pending': [],
+                'risk': {},
+                'contexts': [],
+            }, stream)
+
+        cold_history = ReplayHistory()
+        candidates = [SampleTest('test_pass'), SampleTest('test_skip')]
+        ordered = cold_history.order(candidates)
+
+        self.assertEqual([item.id() for item in candidates],
+                         [item.id() for item in ordered])
+        self.assertEqual([], cold_history.state['failed'])
+        cold_history.save()
+        with open(cold_history.path) as stream:
+            self.assertEqual(2, __import__('json').load(stream)['version'])
+
+    def test_run_provenance_does_not_change_stable_cache_key(self):
+        names = ('CI_REPLAY_REPOSITORY', 'CI_REPLAY_HEAD_REF', 'CI_REPLAY_PR',
+                 'CI_REPLAY_LANE', 'CI_REPLAY_SHA', 'CI_REPLAY_RUN_ID',
+                 'CI_REPLAY_JOB_ID')
+        previous = dict((name, os.environ.get(name)) for name in names)
+        try:
+            os.environ.update({
+                'CI_REPLAY_REPOSITORY': 'owner/project',
+                'CI_REPLAY_HEAD_REF': 'feature/cache-scope',
+                'CI_REPLAY_PR': '77',
+                'CI_REPLAY_LANE': 'py27-django-1.8',
+                'CI_REPLAY_SHA': 'a' * 40,
+                'CI_REPLAY_RUN_ID': 'run-one',
+                'CI_REPLAY_JOB_ID': 'job-one',
+            })
+            first = ReplayHistory()
+            os.environ['CI_REPLAY_SHA'] = 'b' * 40
+            os.environ['CI_REPLAY_RUN_ID'] = 'run-two'
+            os.environ['CI_REPLAY_JOB_ID'] = 'job-two'
+            second = ReplayHistory()
+            self.assertEqual(first.path, second.path)
+            self.assertNotEqual(first.context['sha'], second.context['sha'])
+            self.assertNotEqual(first.context['run_id'], second.context['run_id'])
+            self.assertNotEqual(first.context['job_id'], second.context['job_id'])
+        finally:
+            for name, value in previous.items():
+                if value is None:
+                    os.environ.pop(name, None)
+                else:
+                    os.environ[name] = value
+
     def test_invalid_cache_falls_back_to_cold_history(self):
         self.history.save()
         with open(self.history.path, 'w') as stream:
