@@ -3,6 +3,7 @@ from __future__ import with_statement
 
 import io
 import os
+import re
 import shutil
 import tempfile
 try:
@@ -427,6 +428,32 @@ class ReplayHistoryTests(unittest.TestCase):
                     os.environ.pop(name, None)
                 else:
                     os.environ[name] = value
+
+    def test_djmaster_failure_is_build_blocking(self):
+        root = os.path.dirname(os.path.dirname(__file__))
+        with open(os.path.join(root, 'tox.ini')) as stream:
+            tox_config = stream.read()
+        # Tox defaults to failing the env when a command fails. This project
+        # override had suppressed failures in every djmaster environment.
+        self.assertNotIn('ignore_outcome', tox_config)
+
+        with open(os.path.join(root, '.travis.yml')) as stream:
+            travis_config = stream.read()
+        python_values = re.findall(
+            r'^  - "([^"]+)"$', travis_config, re.MULTILINE)
+        jobs = re.findall(
+            r'^\s+- stage: ([^\s]+)\n\s+env: TOXENV=([^\s]+)$',
+            travis_config, re.MULTILINE)
+        stages = re.findall(r'^\s+- name: ([^\s]+)$',
+                            travis_config, re.MULTILINE)
+        by_env = dict((env, stage) for stage, env in jobs)
+        expected = ('py27-djmaster', 'py34-djmaster', 'py35-djmaster')
+        self.assertEqual(['3.5'], python_values)
+        self.assertTrue(all(env in by_env for env in expected))
+        self.assertEqual(18, len(jobs))
+        self.assertEqual(stages, [stage for stage, env in jobs])
+        self.assertEqual(len(jobs), len(set(stage for stage, env in jobs)))
+        self.assertNotIn('allow_failures', travis_config)
 
     def test_valid_v1_cache_falls_back_to_cold_history(self):
         legacy_failure = SampleTest('test_skip').id()
