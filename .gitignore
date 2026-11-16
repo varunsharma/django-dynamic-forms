@@ -5,6 +5,7 @@ build/
 django_dynamic_forms.egg-info/
 dist/
 docs/build/
+.ci-replay-cache/
 
 example/*.db
 
