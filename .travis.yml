@@ -2,6 +2,8 @@ language: python
 
 python:
   - "3.5"
+env:
+  - ""
 
 cache:
   directories:
@@ -27,42 +29,63 @@ stages:
   - name: replay-17
   - name: replay-18
 jobs:
+  exclude:
+    - python: "3.5"
+      env: ""
   include:
     - stage: replay-01
+      python: "3.5"
       env: TOXENV=py27-dj17
     - stage: replay-02
+      python: "3.5"
       env: TOXENV=py33-dj17
     - stage: replay-03
+      python: "3.5"
       env: TOXENV=py34-dj17
     - stage: replay-04
+      python: "3.5"
       env: TOXENV=py33-dj18
     - stage: replay-05
+      python: "3.5"
       env: TOXENV=py27-dj18
     - stage: replay-06
+      python: "3.5"
       env: TOXENV=py27-dj19
     - stage: replay-07
+      python: "3.5"
       env: TOXENV=py27-dj110
     - stage: replay-08
+      python: "3.5"
       env: TOXENV=py34-dj18
     - stage: replay-09
+      python: "3.5"
       env: TOXENV=py34-dj19
     - stage: replay-10
+      python: "3.5"
       env: TOXENV=py34-dj110
     - stage: replay-11
+      python: "3.5"
       env: TOXENV=py35-dj18
     - stage: replay-12
+      python: "3.5"
       env: TOXENV=py35-dj19
     - stage: replay-13
+      python: "3.5"
       env: TOXENV=py35-dj110
     - stage: replay-14
+      python: "3.5"
       env: TOXENV=py27-djmaster
     - stage: replay-15
+      python: "3.5"
       env: TOXENV=py34-djmaster
     - stage: replay-16
+      python: "3.5"
       env: TOXENV=py35-djmaster
     - stage: replay-17
+      python: "3.5"
       env: TOXENV=flake8
     - stage: replay-18
+      python: "3.5"
       env: TOXENV=isort
 
 install:

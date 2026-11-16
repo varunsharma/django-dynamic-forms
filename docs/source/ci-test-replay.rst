@@ -40,8 +40,10 @@ required stages so their test failures also stop the build. The tox
 ``ignore_outcome`` override was removed so a failing Django-master test
 returns failure to Travis. No branch-wide,
 commit-wide, or pull-request-wide cancellation is performed.
-The one-element Python matrix is intentional: Travis uses the explicit
-``jobs.include`` rows as the complete matrix and does not add a default job.
+The empty default Python/environment row is explicitly excluded from the
+Travis matrix. Each included test job sets its Python version and tox lane,
+leaving only the staged test jobs in the build. See
+https://docs.travis-ci.com/user/build-matrix/ for matrix exclusion rules.
 
 To run the focused adapter checks locally, use::
 

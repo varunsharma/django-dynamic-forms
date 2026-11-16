@@ -439,18 +439,30 @@ class ReplayHistoryTests(unittest.TestCase):
 
         with open(os.path.join(root, '.travis.yml')) as stream:
             travis_config = stream.read()
-        python_values = re.findall(
-            r'^  - "([^"]+)"$', travis_config, re.MULTILINE)
+        self.assertRegex(travis_config, r'(?m)^env:\n  - ""$')
+        exclusions = re.findall(
+            r'^  exclude:\n    - python: "([^"]+)"\n      env: ""$',
+            travis_config, re.MULTILINE)
+        self.assertEqual(['3.5'], exclusions)
+        self.assertEqual(['3.5'], re.findall(
+            r'^python:\n  - "([^"]+)"$', travis_config, re.MULTILINE))
         jobs = re.findall(
-            r'^\s+- stage: ([^\s]+)\n\s+env: TOXENV=([^\s]+)$',
+            r'^\s+- stage: ([^\s]+)\n\s+python: "3.5"\n'
+            r'\s+env: TOXENV=([^\s]+)$',
             travis_config, re.MULTILINE)
         stages = re.findall(r'^\s+- name: ([^\s]+)$',
                             travis_config, re.MULTILINE)
+        expected = (
+            'py27-dj17', 'py33-dj17', 'py34-dj17', 'py33-dj18',
+            'py27-dj18', 'py27-dj19', 'py27-dj110', 'py34-dj18',
+            'py34-dj19', 'py34-dj110', 'py35-dj18', 'py35-dj19',
+            'py35-dj110', 'py27-djmaster', 'py34-djmaster',
+            'py35-djmaster', 'flake8', 'isort')
+        self.assertEqual(expected, tuple(env for stage, env in jobs))
         by_env = dict((env, stage) for stage, env in jobs)
-        expected = ('py27-djmaster', 'py34-djmaster', 'py35-djmaster')
-        self.assertEqual(['3.5'], python_values)
-        self.assertTrue(all(env in by_env for env in expected))
-        self.assertEqual(18, len(jobs))
+        expected_djmaster = ('py27-djmaster', 'py34-djmaster',
+                             'py35-djmaster')
+        self.assertTrue(all(env in by_env for env in expected_djmaster))
         self.assertEqual(stages, [stage for stage, env in jobs])
         self.assertEqual(len(jobs), len(set(stage for stage, env in jobs)))
         self.assertNotIn('allow_failures', travis_config)
