@@ -2,6 +2,10 @@ language: python
 
 python: 3.5
 
+cache:
+  directories:
+    - .ci-replay-cache
+
 env:
   - TOXENV=py27-dj17
   - TOXENV=py33-dj17
