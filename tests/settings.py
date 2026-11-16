@@ -55,6 +55,7 @@ else:
     )
 
 ROOT_URLCONF = 'tests.urls'
+TEST_RUNNER = 'ci_replay.ReplayDiscoverRunner'
 
 WSGI_APPLICATION = 'tests.wsgi.application'
 

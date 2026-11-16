@@ -10,6 +10,7 @@ Contents:
    installation
    usage
    problems
+   ci-test-replay
    changes
    ref/index
 
@@ -20,4 +21,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
